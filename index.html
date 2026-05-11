@@ -3843,6 +3843,7 @@
         .order('uf', { ascending: true });
       if (!error && data && data.length > 0) {
         assistenciasData = data.map(r => ({
+          // atualiza contador
           uf: r.uf, cidade: r.cidade, nome: r.nome,
           tel: r.tel, end: r.endereco, lat: r.lat, lng: r.lng
         }));
@@ -3894,7 +3895,7 @@
 
     if (!query) {
       el.innerHTML = `<div class="at-empty"><div class="at-empty-icon">🔍</div>Digite uma cidade, estado ou nome para filtrar os pontos.</div>`;
-      count.textContent = `${assistencias.length} pontos ativos em todo o Brasil`;
+      count.textContent = `${assistenciasData.length} pontos ativos em todo o Brasil`;
       return;
     }
 
