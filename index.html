@@ -1673,6 +1673,44 @@
   .produto-opcao-vars { font-size: 0.7rem; color: #7a9ab0; margin-top: 2px; }
   #modal-produto-overlay.open { display: flex !important; }
 
+
+  /* ── RESPONSIVO MOBILE ── */
+  @media (max-width: 768px) {
+    .nav-links { display: none; }
+    .nav { padding: 0 1rem; }
+    .hero { padding: 2rem 1rem 1.5rem; }
+    .hero h1 { font-size: 1.8rem; }
+    .hero-sub { font-size: 0.82rem; }
+    .hero-buttons { flex-direction: column; gap: 0.6rem; }
+    .hero-buttons a { text-align: center; }
+    .products-grid { grid-template-columns: 1fr; }
+    .promo-grid { grid-template-columns: 1fr; }
+    .section { padding: 2rem 1rem; }
+    .section-title { font-size: 1.4rem; }
+    .at-layout { grid-template-columns: 1fr !important; }
+    .script-layout { grid-template-columns: 1fr !important; }
+    .closer-grid { grid-template-columns: 1fr 1fr; }
+    .closer-processo-flow { flex-direction: column; }
+    .lojas-grid { grid-template-columns: 1fr !important; }
+    .estados-grid { grid-template-columns: repeat(3, 1fr); }
+    .admin-overlay { padding: 1rem !important; }
+    .promo-admin-body { grid-template-columns: 1fr 1fr !important; }
+    .hero-stats { gap: 1.2rem; flex-wrap: wrap; }
+    .redes-grid { grid-template-columns: 1fr !important; }
+    .script-tabs { flex-direction: column; }
+    .script-tab { min-width: unset !important; }
+    .closer-hero { flex-direction: column; gap: 1rem; }
+    .closer-hero-title { font-size: 1.3rem; }
+    .admin-header { flex-direction: column; gap: 0.8rem; align-items: flex-start; }
+    .admin-header-actions { width: 100%; justify-content: space-between; }
+  }
+  @media (max-width: 480px) {
+    .hero h1 { font-size: 1.5rem; }
+    .estados-grid { grid-template-columns: repeat(2, 1fr); }
+    .closer-grid { grid-template-columns: 1fr; }
+    .promo-admin-body { grid-template-columns: 1fr !important; }
+  }
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
 
@@ -1726,14 +1764,7 @@
   <h1>BEM-VINDO À<br><span>ESTILO AR</span></h1>
   <p class="hero-sub">Tudo que sua equipe precisa em um só lugar — produtos, materiais, processos e muito mais.</p>
   <!-- SEARCH BAR -->
-  <div class="search-wrapper">
-    <div class="search-box">
-      <span class="search-icon">🔍</span>
-      <input class="search-input" id="searchInput" type="text" placeholder="Buscar produtos, manuais, processos, links...">
-      <button class="search-clear" id="searchClear">✕</button>
-    </div>
-    <div class="search-results" id="searchResults"></div>
-  </div>
+
   <div class="hero-buttons">
     <a href="#produtos" class="btn-primary">Ver Produtos</a>
     <a href="https://www.estiloar.com.br" target="_blank" class="btn-outline">🌐 Site Oficial</a>
@@ -4924,20 +4955,26 @@ const PRODUTOS_PREDEFINIDOS = [
   { nome: 'Geladeira Portátil 18L', icon: '🧊', vars: ['18L'] },
 ];
 
-function novaPromocao() {
-  // Build modal HTML
-  const opcoesHtml = PRODUTOS_PREDEFINIDOS.map((p, i) => `
-    <div class="produto-opcao" onclick="criarPromocao(${i})">
-      <div class="produto-opcao-icon">${p.icon}</div>
-      <div>
-        <div class="produto-opcao-nome">${p.nome}</div>
-        <div class="produto-opcao-vars">Variações: ${p.vars.join(' · ')}</div>
-      </div>
-    </div>
-  `).join('');
-
-  document.getElementById('modal-produto-lista').innerHTML = opcoesHtml;
-  document.getElementById('modal-produto-overlay').classList.add('open');
+async function novaPromocao() {
+  // Cria direto com campos em branco — sem modal de escolha
+  const dados = {
+    produto: '',
+    titulo: 'Oferta Especial',
+    badge: 'Destaque',
+    parcelamento: '10x sem juros',
+    frete_gratis: 'Sim',
+    garantia_estendida: 'Sim',
+    obs: '',
+    validade: '',
+    ativa: false
+  };
+  try {
+    const { error } = await supabaseClient.from('promocoes').insert([dados]).select();
+    if (error) { alert('Erro ao criar: ' + error.message); return; }
+    carregarPromocoesAdmin();
+  } catch(e) {
+    alert('Erro: ' + e.message);
+  }
 }
 
 function fecharModalProduto() {
