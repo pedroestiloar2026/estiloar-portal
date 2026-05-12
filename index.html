@@ -97,74 +97,6 @@
     letter-spacing: 1px; text-transform: uppercase;
   }
 
-  /* ── DEPOIMENTOS BUSCA ── */
-  #depoimentos-busca { padding: 4rem 2rem; max-width: 900px; margin: 0 auto; }
-
-  .dep-filtros {
-    display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 2rem;
-  }
-  .dep-filtro-group {
-    display: flex; flex-direction: column; gap: 0.4rem; flex: 1; min-width: 160px;
-  }
-  .dep-filtro-group label {
-    font-size: 0.7rem; font-weight: 700; letter-spacing: 2px;
-    text-transform: uppercase; color: var(--cyan);
-  }
-  .dep-select {
-    background: var(--card); color: var(--white);
-    border: 1.5px solid rgba(0,153,214,0.25); border-radius: 8px;
-    padding: 0.6rem 0.9rem; font-size: 0.88rem;
-    font-family: 'Aller', 'Barlow', sans-serif;
-    appearance: none; cursor: pointer;
-    transition: border-color 0.2s;
-  }
-  .dep-select:focus { outline: none; border-color: var(--cyan); }
-  .dep-select:disabled { opacity: 0.45; cursor: default; }
-
-  .dep-resultados { margin-top: 1rem; }
-
-  .dep-produto-bloco { margin-bottom: 2.2rem; }
-  .dep-produto-nome {
-    font-family: 'Poppins', sans-serif;
-    font-size: 1rem; font-weight: 700;
-    color: var(--white); margin-bottom: 0.8rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 2px solid rgba(0,153,214,0.2);
-  }
-
-  .dep-item {
-    display: flex; align-items: center; justify-content: space-between;
-    background: var(--card); border-radius: 10px;
-    border: 1.5px solid rgba(0,153,214,0.13);
-    padding: 0.85rem 1.1rem; margin-bottom: 0.55rem;
-    transition: border-color 0.2s, box-shadow 0.2s;
-  }
-  .dep-item:hover { border-color: rgba(0,153,214,0.4); box-shadow: 0 4px 16px rgba(0,153,214,0.08); }
-
-  .dep-info { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
-  .dep-marca {
-    font-weight: 700; font-size: 0.9rem; color: var(--white);
-    min-width: 90px;
-  }
-  .dep-sep { color: rgba(0,153,214,0.4); font-size: 0.8rem; }
-  .dep-modelo { font-size: 0.88rem; color: var(--gray); }
-  .dep-count {
-    background: rgba(0,153,214,0.12); color: var(--cyan);
-    font-size: 0.75rem; font-weight: 700;
-    padding: 3px 10px; border-radius: 20px;
-    white-space: nowrap;
-  }
-
-  .dep-empty {
-    text-align: center; color: var(--gray);
-    font-size: 0.9rem; padding: 3rem 0;
-  }
-  .dep-loading {
-    text-align: center; color: var(--cyan);
-    font-size: 0.85rem; padding: 2rem 0;
-    letter-spacing: 1px;
-  }
-
   /* ── HERO ── */
   .hero {
     position: relative; z-index: 1;
@@ -1777,7 +1709,6 @@
     <li><a href="#promocoes">Promoções</a></li>
     <li><a href="#assistencia">Assistência</a></li>
     <li><a href="#processos">Processos</a></li>
-    <li><a href="#depoimentos-busca">Depoimentos</a></li>
     <li><a href="#lojas">Lojas</a></li>
     <li><a href="#redes">Redes</a></li>
     <li><a href="https://www.estiloar.com.br" target="_blank" style="color:#0099D6;font-weight:800;">🌐 Site Oficial</a></li>
@@ -3251,39 +3182,6 @@
 
 
 
-
-<!-- DEPOIMENTOS BUSCA -->
-<hr class="divider">
-<section id="depoimentos-busca" class="reveal">
-  <div class="section-label">Provas Sociais</div>
-  <div class="section-title">Buscar Depoimentos</div>
-  <p class="section-sub">Filtre por produto, marca e modelo para encontrar depoimentos e compartilhar com seus clientes.</p>
-
-  <div class="dep-filtros">
-    <div class="dep-filtro-group">
-      <label>Produto</label>
-      <select class="dep-select" id="dep-sel-produto">
-        <option value="">Todos os produtos</option>
-      </select>
-    </div>
-    <div class="dep-filtro-group">
-      <label>Marca</label>
-      <select class="dep-select" id="dep-sel-marca">
-        <option value="">Todas as marcas</option>
-      </select>
-    </div>
-    <div class="dep-filtro-group">
-      <label>Modelo</label>
-      <select class="dep-select" id="dep-sel-modelo">
-        <option value="">Todos os modelos</option>
-      </select>
-    </div>
-  </div>
-
-  <div class="dep-resultados" id="dep-resultados">
-    <div class="dep-loading">Carregando depoimentos...</div>
-  </div>
-</section>
 
 <!-- FOOTER -->
 
@@ -4895,145 +4793,7 @@ async function carregarProdutosSupabase() {
 
 document.addEventListener('DOMContentLoaded', function() {
   carregarProdutosSupabase();
-  iniciarDepoimentosBusca();
 });
-
-// ── DEPOIMENTOS BUSCA ──────────────────────────────────────────────
-let _depTodos = [];
-
-async function iniciarDepoimentosBusca() {
-  const res = document.getElementById('dep-resultados');
-  if (!res) return;
-
-  try {
-    const { data, error } = await supabaseClient
-      .from('depoimentos')
-      .select('produto, marca, modelo')
-      .order('produto').order('marca').order('modelo');
-
-    if (error) throw error;
-
-    _depTodos = data || [];
-
-    const produtos = [...new Set(_depTodos.map(d => d.produto).filter(Boolean))].sort();
-    const selProduto = document.getElementById('dep-sel-produto');
-    produtos.forEach(p => {
-      const o = document.createElement('option');
-      o.value = p; o.textContent = p;
-      selProduto.appendChild(o);
-    });
-
-    _depPopularMarcas('');
-    _depPopularModelos('', '');
-
-    selProduto.addEventListener('change', () => {
-      _depPopularMarcas(selProduto.value);
-      _depPopularModelos(selProduto.value, '');
-      document.getElementById('dep-sel-marca').value = '';
-      document.getElementById('dep-sel-modelo').value = '';
-      _depRenderizar();
-    });
-    document.getElementById('dep-sel-marca').addEventListener('change', () => {
-      _depPopularModelos(
-        document.getElementById('dep-sel-produto').value,
-        document.getElementById('dep-sel-marca').value
-      );
-      document.getElementById('dep-sel-modelo').value = '';
-      _depRenderizar();
-    });
-    document.getElementById('dep-sel-modelo').addEventListener('change', _depRenderizar);
-
-    _depRenderizar();
-
-  } catch(e) {
-    if (res) res.innerHTML = '<div class="dep-empty">Erro ao carregar depoimentos. Verifique se a tabela existe no Supabase.</div>';
-    console.error('depoimentos erro:', e.message);
-  }
-}
-
-function _depNormalizeModelo(m) {
-  if (!m) return '';
-  return m.replace(/\s*\(\d+\)\s*$/, '').trim();
-}
-
-function _depFiltrado() {
-  const produto = document.getElementById('dep-sel-produto').value;
-  const marca   = document.getElementById('dep-sel-marca').value;
-  const modelo  = document.getElementById('dep-sel-modelo').value;
-  return _depTodos.filter(d =>
-    (!produto || d.produto === produto) &&
-    (!marca   || d.marca === marca) &&
-    (!modelo  || _depNormalizeModelo(d.modelo) === modelo)
-  );
-}
-
-function _depPopularMarcas(produto) {
-  const sel = document.getElementById('dep-sel-marca');
-  sel.innerHTML = '<option value="">Todas as marcas</option>';
-  const filtro = produto ? _depTodos.filter(d => d.produto === produto) : _depTodos;
-  const marcas = [...new Set(filtro.map(d => d.marca).filter(Boolean))].sort();
-  marcas.forEach(m => {
-    const o = document.createElement('option');
-    o.value = m; o.textContent = m;
-    sel.appendChild(o);
-  });
-}
-
-function _depPopularModelos(produto, marca) {
-  const sel = document.getElementById('dep-sel-modelo');
-  sel.innerHTML = '<option value="">Todos os modelos</option>';
-  let filtro = _depTodos;
-  if (produto) filtro = filtro.filter(d => d.produto === produto);
-  if (marca)   filtro = filtro.filter(d => d.marca === marca);
-  const modelos = [...new Set(filtro.map(d => _depNormalizeModelo(d.modelo)).filter(Boolean))].sort();
-  modelos.forEach(m => {
-    const o = document.createElement('option');
-    o.value = m; o.textContent = m;
-    sel.appendChild(o);
-  });
-}
-
-function _depRenderizar() {
-  const res = document.getElementById('dep-resultados');
-  const dados = _depFiltrado();
-
-  if (!dados.length) {
-    res.innerHTML = '<div class="dep-empty">Nenhum depoimento encontrado para esse filtro.</div>';
-    return;
-  }
-
-  const agrupado = {};
-  dados.forEach(d => {
-    const prod = d.produto || '—';
-    const marc = d.marca   || '—';
-    const mod  = _depNormalizeModelo(d.modelo) || '—';
-    if (!agrupado[prod]) agrupado[prod] = {};
-    if (!agrupado[prod][marc]) agrupado[prod][marc] = {};
-    agrupado[prod][marc][mod] = (agrupado[prod][marc][mod] || 0) + 1;
-  });
-
-  let html = '';
-  for (const prod of Object.keys(agrupado).sort()) {
-    html += `<div class="dep-produto-bloco"><div class="dep-produto-nome">📦 ${prod}</div>`;
-    for (const marc of Object.keys(agrupado[prod]).sort()) {
-      for (const mod of Object.keys(agrupado[prod][marc]).sort()) {
-        const total = agrupado[prod][marc][mod];
-        html += `<div class="dep-item">
-          <div class="dep-info">
-            <span class="dep-marca">${marc}</span>
-            <span class="dep-sep">·</span>
-            <span class="dep-modelo">${mod}</span>
-          </div>
-          <span class="dep-count">${total} depoimento${total !== 1 ? 's' : ''}</span>
-        </div>`;
-      }
-    }
-    html += '</div>';
-  }
-  res.innerHTML = html;
-}
-// ── FIM DEPOIMENTOS BUSCA ──────────────────────────────────────────
-
 
 function abrirAdminSenha() {
   document.getElementById('admin-senha-overlay').classList.add('open');
