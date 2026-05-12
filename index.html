@@ -4762,6 +4762,10 @@ async function carregarProdutosSupabase() {
     const grid = document.getElementById('products-grid');
     if (!grid) return;
 
+    // Armazena os conteúdos de info_basica em um mapa seguro (evita quebrar o HTML ao passar no onclick)
+    window._infoBasicaMap = {};
+    data.forEach(p => { if (p.info_basica) window._infoBasicaMap[p.id] = p.info_basica; });
+
     grid.innerHTML = data.map(p => `
       <div class="product-card">
         <div class="product-img">
@@ -4777,7 +4781,7 @@ async function carregarProdutosSupabase() {
             ${p.link_manual ? `<a href="${p.link_manual}" target="_blank" class="product-btn"><span class="icon">📋</span> Manual</a>` : ''}
             ${p.link_depoimentos ? `<a href="${p.link_depoimentos}" target="_blank" class="product-btn"><span class="icon">💬</span> Depoimentos</a>` : ''}
             ${p.link_videos ? `<a href="${p.link_videos}" target="_blank" class="product-btn"><span class="icon">🎬</span> Vídeos</a>` : ''}
-            ${p.info_basica ? `<button class="product-btn" onclick="abrirInfoPortal(${JSON.stringify(p.info_basica||'')})"><span class="icon">ℹ️</span> Informações Básicas</button>` : ''}
+            ${p.info_basica ? `<button class="product-btn" onclick="abrirInfoPortalPorId(${p.id})"><span class="icon">ℹ️</span> Informações Básicas</button>` : ''}
           </div>
         </div>
       </div>
@@ -5291,6 +5295,11 @@ function abrirInfoPortal(conteudo) {
   document.getElementById('modal-info-portal-content').innerHTML = conteudo;
   document.getElementById('modal-info-portal').classList.add('open');
   document.body.style.overflow = 'hidden';
+}
+
+function abrirInfoPortalPorId(id) {
+  const conteudo = (window._infoBasicaMap || {})[id] || '';
+  abrirInfoPortal(conteudo);
 }
 </script>
 
