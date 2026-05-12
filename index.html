@@ -3849,6 +3849,21 @@
         }));
         buildDropdown();
         applyFilters();
+        // Atualiza contador geral
+        const contEl = document.getElementById('atCount');
+        if (contEl) contEl.textContent = assistenciasData.length + ' pontos ativos em todo o Brasil';
+        // Atualiza cards de estado com contadores reais
+        const counts = {};
+        assistenciasData.forEach(p => { counts[p.uf] = (counts[p.uf] || 0) + 1; });
+        document.querySelectorAll('.estado-card').forEach(card => {
+          const uf = card.id.replace('estado-card-', '');
+          const countEl = card.querySelector('.estado-count');
+          if (countEl) countEl.textContent = counts[uf] || 0;
+          // Atualiza a barra de progresso se existir
+          const maxCount = Math.max(...Object.values(counts));
+          const barFill = card.querySelector('.estado-bar-fill');
+          if (barFill) barFill.style.width = ((counts[uf] || 0) / maxCount * 100) + '%';
+        });
       }
     } catch(e) {
       console.log('loadAssistencias erro:', e.message);
