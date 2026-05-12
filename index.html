@@ -1678,6 +1678,8 @@
 
 
 </script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.7/quill.snow.min.css" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.7/quill.min.js"></script>
 </head>
 <body class="nao-logado">
 
@@ -4677,10 +4679,13 @@ function renderProdutoAdminCard(p) {
       <div class="promo-admin-field"><label>Ordem de exibição</label><input id="fp-${p.id}-ordem" type="number" value="${p.ordem||0}"></div>
     </div>
     <div class="promo-admin-actions" style="align-items:center;justify-content:space-between;">
-      <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;font-size:0.72rem;color:#0099D6;font-weight:700;">
-        📷 Trocar Foto
-        <input type="file" accept="image/*" style="display:none;" onchange="uploadFotoProduto(${p.id}, this)">
-      </label>
+      <div style="display:flex;align-items:center;gap:0.6rem;">
+        <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;font-size:0.72rem;color:#0099D6;font-weight:700;">
+          📷 Trocar Foto
+          <input type="file" accept="image/*" style="display:none;" onchange="uploadFotoProduto(${p.id}, this)">
+        </label>
+        <button style="background:#f0f7fb;border:1px solid rgba(0,153,214,0.2);color:#0099D6;border-radius:8px;padding:5px 12px;font-size:0.7rem;font-weight:700;cursor:pointer;" onclick="abrirModalInfoBasica(${p.id}, \`${p.nome}\`, \`${(p.info_basica||'').replace(/`/g,'')}\`)">ℹ️ Info Básica</button>
+      </div>
       <div style="display:flex;gap:0.5rem;">
         <button class="btn-excluir" onclick="excluirProdutoAdmin(${p.id})">🗑️ Excluir</button>
         <button class="btn-salvar" onclick="salvarProdutoAdmin(${p.id})">💾 Salvar</button>
@@ -4772,6 +4777,7 @@ async function carregarProdutosSupabase() {
             ${p.link_manual ? `<a href="${p.link_manual}" target="_blank" class="product-btn"><span class="icon">📋</span> Manual</a>` : ''}
             ${p.link_depoimentos ? `<a href="${p.link_depoimentos}" target="_blank" class="product-btn"><span class="icon">💬</span> Depoimentos</a>` : ''}
             ${p.link_videos ? `<a href="${p.link_videos}" target="_blank" class="product-btn"><span class="icon">🎬</span> Vídeos</a>` : ''}
+            ${p.info_basica ? `<button class="product-btn" onclick="abrirInfoPortal(${JSON.stringify(p.info_basica||'')})"><span class="icon">ℹ️</span> Informações Básicas</button>` : ''}
           </div>
         </div>
       </div>
@@ -5215,6 +5221,78 @@ document.addEventListener('DOMContentLoaded', () => {
     <button onclick="fecharModalProduto()" style="width:100%;margin-top:0.8rem;padding:8px;background:none;border:1px solid #ddd;border-radius:10px;font-family:'Poppins',sans-serif;font-size:0.78rem;color:#7a9ab0;cursor:pointer;">Cancelar</button>
   </div>
 </div>
+
+
+<!-- MODAL EDITAR INFO BÁSICA (ADMIN) -->
+<div id="modal-info-basica" style="display:none;position:fixed;inset:0;z-index:9800;background:rgba(0,30,60,0.7);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:1rem;">
+  <div style="background:#fff;border-radius:20px;width:100%;max-width:700px;max-height:90vh;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,0.25);display:flex;flex-direction:column;">
+    <div style="background:#003559;padding:1.2rem 1.5rem;display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <div style="font-family:'Montserrat',sans-serif;font-size:0.9rem;font-weight:800;color:#fff;text-transform:uppercase;letter-spacing:1px;">✏️ Informações Básicas</div>
+        <div id="modal-info-produto-nome" style="font-size:0.72rem;color:rgba(255,255,255,0.6);margin-top:2px;"></div>
+      </div>
+      <button onclick="fecharModalInfoBasica()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:#fff;border-radius:8px;padding:6px 14px;font-size:0.75rem;font-weight:700;cursor:pointer;">✕ Fechar</button>
+    </div>
+    <div style="padding:1rem 1.5rem;flex:1;overflow-y:auto;">
+      <div style="font-size:0.72rem;color:#7a9ab0;margin-bottom:0.8rem;">Use o editor para formatar as informações que aparecerão para os vendedores ao clicar em ℹ️:</div>
+      <div id="quill-editor" style="height:300px;font-family:'Poppins',sans-serif;"></div>
+    </div>
+    <div style="padding:1rem 1.5rem;border-top:1px solid #f0f7fb;display:flex;justify-content:flex-end;gap:0.8rem;">
+      <button onclick="fecharModalInfoBasica()" style="background:#fff;border:1px solid #ddd;border-radius:8px;padding:8px 20px;font-family:'Poppins',sans-serif;font-size:0.78rem;font-weight:600;color:#7a9ab0;cursor:pointer;">Cancelar</button>
+      <button onclick="salvarInfoBasica()" style="background:#0099D6;border:none;border-radius:8px;padding:8px 24px;font-family:'Poppins',sans-serif;font-size:0.78rem;font-weight:700;color:#fff;cursor:pointer;">💾 Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL INFO BÁSICA PORTAL (VENDEDORES) -->
+<div id="modal-info-portal" class="info-modal-overlay" onclick="if(event.target===this){this.classList.remove('open');document.body.style.overflow='';}">
+  <div class="info-modal-box">
+    <div class="info-modal-header">
+      <div class="info-modal-title">ℹ️ Informações Básicas</div>
+      <button class="info-modal-close" onclick="document.getElementById('modal-info-portal').classList.remove('open');document.body.style.overflow='';">✕</button>
+    </div>
+    <div id="modal-info-portal-content" style="font-size:0.83rem;color:#3a5f7a;line-height:1.7;"></div>
+  </div>
+</div>
+
+<script>
+// ── QUILL INFO BÁSICA ──
+let quillEditor = null;
+let currentInfoProdutoId = null;
+
+function abrirModalInfoBasica(id, nome, conteudo) {
+  currentInfoProdutoId = id;
+  document.getElementById('modal-info-produto-nome').textContent = nome;
+  document.getElementById('modal-info-basica').style.display = 'flex';
+  if (!quillEditor) {
+    quillEditor = new Quill('#quill-editor', {
+      theme: 'snow',
+      modules: { toolbar: [['bold','italic','underline'],[{'list':'ordered'},{'list':'bullet'}],[{'header':[2,3,false]}],['clean']] },
+      placeholder: 'Digite as informações básicas do produto...'
+    });
+  }
+  quillEditor.root.innerHTML = conteudo || '';
+}
+
+function fecharModalInfoBasica() {
+  document.getElementById('modal-info-basica').style.display = 'none';
+  currentInfoProdutoId = null;
+}
+
+async function salvarInfoBasica() {
+  if (!currentInfoProdutoId || !quillEditor) return;
+  const html = quillEditor.root.innerHTML;
+  const { error } = await supabaseClient.from('produtos').update({ info_basica: html }).eq('id', currentInfoProdutoId);
+  if (!error) { alert('✅ Informações salvas!'); fecharModalInfoBasica(); carregarProdutosAdmin(); }
+  else alert('❌ Erro: ' + error.message);
+}
+
+function abrirInfoPortal(conteudo) {
+  document.getElementById('modal-info-portal-content').innerHTML = conteudo;
+  document.getElementById('modal-info-portal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+</script>
 
 </body>
 </html>
